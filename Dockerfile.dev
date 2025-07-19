@@ -1,0 +1,64 @@
+FROM dunglas/frankenphp:latest-php8.3-alpine
+
+# Install system dependencies
+RUN apk add --no-cache \
+    postgresql-dev \
+    nodejs \
+    npm \
+    git \
+    zip \
+    unzip \
+    curl \
+    bash \
+    make \
+    shadow
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Install PHP extensions
+RUN install-php-extensions \
+    pdo_pgsql \
+    redis \
+    opcache \
+    intl \
+    exif \
+    gd \
+    zip \
+    xdebug
+
+# Configure Xdebug
+RUN echo "xdebug.mode=develop,debug,coverage" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo "xdebug.client_host=host.docker.internal" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+
+# Set working directory
+WORKDIR /app
+
+# Copy Caddy configuration
+COPY Caddyfile /etc/caddy/Caddyfile
+
+# Create a script to handle permissions
+RUN echo '#!/bin/sh' > /usr/local/bin/docker-entrypoint.sh && \
+    echo 'if [ -n "$USER_ID" ] && [ -n "$GROUP_ID" ]; then' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    usermod -u $USER_ID www-data' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '    groupmod -g $GROUP_ID www-data' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'fi' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'chown -R www-data:www-data /app' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'exec su-exec www-data "$@"' >> /usr/local/bin/docker-entrypoint.sh && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Install su-exec for better privilege dropping
+RUN apk add --no-cache su-exec
+
+# Configure git to trust the directory
+RUN git config --global --add safe.directory /app
+
+# Expose ports
+EXPOSE 80 443
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
+# Run FrankenPHP
+CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile", "--watch"]

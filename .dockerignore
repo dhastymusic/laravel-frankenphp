@@ -1,24 +1,53 @@
-*.log
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Docker
+.docker
+.dockerignore
+Dockerfile*
+docker-compose*.yml
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
-.env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
+Thumbs.db
+
+# Laravel
+/vendor
 /node_modules
-/public/build
 /public/hot
 /public/storage
 /storage/*.key
-/storage/pail
-/vendor
+.env
+.env.*
+!.env.example
+.phpunit.result.cache
 Homestead.json
 Homestead.yaml
-Thumbs.db
+npm-debug.log
+yarn-error.log
+
+# Testing
+/coverage
+.phpunit.result.cache
+
+# Logs
+*.log
+
+# Temp files
+*.tmp
+*.temp
+*.cache
