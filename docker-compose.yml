@@ -52,10 +52,14 @@ services:
 
   redis:
     image: redis:7-alpine
+    container_name: ${APP_NAME:-laravel}_redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
     networks:
       - myapp-network
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -84,6 +88,8 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
+    driver: local
 
 networks:
   myapp-network:
